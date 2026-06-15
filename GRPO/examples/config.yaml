@@ -74,8 +74,8 @@ worker:
 
 trainer:
   total_episodes: 15
-  logger: ["console","wandb"]
-  project_name: easyr1
+  logger: ["console","swanlab"]
+  project_name: rl-with-cold-start
   experiment_name: qwen2_5_vl_7b_grpo
   n_gpus_per_node: 8
   nnodes: 1
