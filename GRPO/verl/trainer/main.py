@@ -15,7 +15,15 @@
 import json
 
 import ray
+import torch.multiprocessing as _mp
 from omegaconf import OmegaConf
+
+# /dev/shm in this container is only 4G and can't be remounted; switch DataLoader
+# worker tensor sharing off shared-memory to avoid SIGBUS on multimodal batches.
+try:
+    _mp.set_sharing_strategy("file_system")
+except RuntimeError:
+    pass
 
 from ..single_controller.ray import RayWorkerGroup
 from ..utils.tokenizer import get_processor, get_tokenizer
@@ -31,6 +39,15 @@ class Runner:
     """A runner for RL training."""
 
     def run(self, config: PPOConfig):
+        # /dev/shm in this container is only 4G and can't be remounted; switch
+        # DataLoader worker tensor sharing off shared-memory to avoid SIGBUS.
+        # Must be set HERE (inside the ray actor process) so the DataLoader
+        # workers forked later inherit the file_system strategy.
+        try:
+            _mp.set_sharing_strategy("file_system")
+        except RuntimeError:
+            pass
+
         # print config
         print(json.dumps(config.to_dict(), indent=2))
 
